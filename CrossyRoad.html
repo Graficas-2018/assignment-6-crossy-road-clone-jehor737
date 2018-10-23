@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+    <title>Crossy Road</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="styles.css" type="text/css">
+    <script src="../libs/three.js/three.min.js"></script>
+    <script src="../libs/three.js/controls/OrbitControls.js"></script>
+    <script src="../libs/jquery-3.3.1/jquery-3.3.1.js"></script>
+  	<script src="../libs/jquery-ui/jquery-ui.js"></script>
+    <script src="../libs/three.js/loaders/OBJLoader.js"></script>
+
+    <script src="js/crossyroad.js"></script>
+    <script type="text/javascript">
+
+  	$(document).ready(
+  		function() {
+  			var canvas = document.getElementById("webglcanvas");
+  			canvas.width = window.innerWidth;
+  			canvas.height = window.innerHeight;
+  			// create the scene
+  			createScene(canvas);
+  			// Run the run loop
+  			run();
+  			/*$("#start").click(function(event) {
+  				//event.preventDefault();
+  				if(!game){
+  					startGame();
+  				}
+  				else{
+  					restartGame();
+  				}
+  			});*/
+
+  		}
+  	);
+
+  </script>
+</head>
+<body>
+  <div id="container">
+    <canvas id="webglcanvas" width=800 height=600></canvas>
+    <div id="score"></div>
+    <div id="time"></div>
+    <!--<button type="button" name="Start" id="start" class="btn btn-primary">Start</button>-->
+  </div>
+</body>
+</html>
