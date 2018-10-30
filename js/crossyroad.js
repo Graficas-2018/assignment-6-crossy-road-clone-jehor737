@@ -3,32 +3,19 @@ renderer = null,
 scene = null,
 root = null,
 group = null,
-game = true,
+game = false,
 ambientLight = null,
+button = null,
 objLoader = null,
-chicken=null,tree1 = null,
+chicken=null,treeModel = null,posicionX=-20,
 orbitControls = null,
-chickenBoxHelper = null, treeBoxHelper = null, chickenBox = null, treeBox = null, newTree=null, car1=null,currentTime,
+chickenBoxHelper = null, treeBoxHelper = null, chickenBox = null, treeBox = null, newTree=null, carModel=null,currentTime,
 carBoxHelper = null, carBox= null, valueScore = 0, speed = 0.01, dotGeo = null, enfrente = null, izquierda =null, derecha=null, atras=null,
 step = 5, chickenGroup=null, treesColliders = [], carsColliders = [];
-var map = "", mapUrl="";
+var map = "", mapUrl="", grass = null, river = null, troncos = null, road =null;
 var trigger = false, turnDown = false, turnUp = false, turnRight = false, turnLeft=false, fired = false,load = false;
-var materials = {
-    shadow: new THREE.MeshBasicMaterial({
-        color: 0x000000,
-        transparent: true,
-        opacity: 0.5
-    }),
-    solid: new THREE.MeshNormalMaterial({}),
-    colliding: new THREE.MeshBasicMaterial({
-        color: 0xff0000,
-        transparent: true,
-        opacity: 0.5
-    }),
-    dot: new THREE.MeshBasicMaterial({
-        color: 0x0000ff
-    })
-};
+var maxTiles = 20;
+var materials = {dot: new THREE.MeshBasicMaterial({color: 0x0000ff })};
 function onWindowResize()
 {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -147,6 +134,13 @@ function moverPuntos(direccion){
   }
 }
 
+
+function startGame(){
+  chicken.move= true;
+  button.style.display = "none";
+}
+
+
 function loadObj()
 {
     if(!objLoader)
@@ -156,8 +150,7 @@ function loadObj()
             var texture = new THREE.TextureLoader().load('models/Chicken/chicken.png');
             object.traverse( function (child)
             {
-                if (child instanceof THREE.Mesh)
-                {
+                if (child instanceof THREE.Mesh){
                     child.castShadow = true;
                     child.receiveShadow = true;
                     child.material.map = texture;
@@ -166,7 +159,7 @@ function loadObj()
 
             chicken = object;
             chickenGroup = new THREE.Object3D;
-            chicken.move = true;
+            chicken.move = false;
             chicken.scale.set(5,5,5);
             chicken.position.z = 0;
             chicken.position.x = 0;
@@ -211,18 +204,18 @@ function loadObj()
                       child.material.map = texture;
                   }
               });
-              tree1 = object;
-              tree1.scale.set(7,7,7);
-              tree1.position.x=0;
-              tree1.position.z=-10;
-              treeBoxHelper = new THREE.BoxHelper();
-              treeBoxHelper.setFromObject(tree1, 0x00ff00);
-              treeBoxHelper.position = tree1.position;
-              treeBoxHelper.update();
-              treeBox = new THREE.Box3().setFromObject(treeBoxHelper);
+              treeModel = object;
+              treeModel.scale.set(step,step,step);
+              treeModel.position.x=posicionX;
+              treeModel.position.z=-10;
+              /*treeBoxHelper = new THREE.BoxHelper();
+              treeBoxHelper.setFromObject(treeModel, 0x00ff00);
+              treeBoxHelper.position = treeModel.position;*/
+              //treeBoxHelper.update();
+              treeBox = new THREE.Box3().setFromObject(treeModel);
               treesColliders.push(treeBox);
-              root.add(treeBoxHelper);
-              root.add(tree1);
+              //root.add(treeBoxHelper);
+              root.add(treeModel);
             });
               objLoader.load('models/Cars/Car1/car1.obj', function(object) {
                 var texture = new THREE.TextureLoader().load('models/Cars/Car1/car1.png');
@@ -235,19 +228,49 @@ function loadObj()
                         child.material.map = texture;
                     }
                 });
-                car1 = object;
-                car1.scale.set(5,5,5);
-                car1.position.x=10;
-                car1.position.z=-50 - Math.random() * 50;
-                carBoxHelper = new THREE.BoxHelper();
-                carBoxHelper.setFromObject(car1, 0x00ff00);
-                carBoxHelper.update();
-
-                root.add(carBoxHelper);
-                root.add(car1);
+                carModel = object;
+                carModel.scale.set(5,5,5);
+                carModel.position.x=10;
+                carModel.position.z=-50 - Math.random() * 50;
+                root.add(carModel);
               });
-              load = true;
-              //addTree();
+              objLoader.load('models/Land/grass.obj',function(object){
+                var texture = new THREE.TextureLoader().load('models/Land/grass.png');
+                object.traverse(function (child)
+                {
+                    if (child instanceof THREE.Mesh){
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                        child.material.map = texture;
+                    }
+                });
+                grass = object;
+                grass.scale.set(5,-1,5);
+                grass.position.x = posicionX;
+                grass.rotation.set(0,Math.PI / 2,Math.PI);
+                root.add(grass);
+                while (posicionX <= 5) {
+                    generateLand();
+                    posicionX += 5;
+                }
+              });
+              objLoader.load('models/Road/road2.obj',function(object){
+                var texture = new THREE.TextureLoader().load('models/Road/road2.png');
+                object.traverse(function (child)
+                {
+                    if (child instanceof THREE.Mesh){
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                        child.material.map = texture;
+                    }
+                });
+                road = object;
+                road.scale.set(5,-1,5);
+                road.position.x=10;
+                road.rotation.set(0,Math.PI / 2,Math.PI);
+                root.add(road);
+              });
+
         },
         function (xhr) {
             console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
@@ -258,43 +281,100 @@ function loadObj()
         });
 }
 
+
+
 function addTree(){
-  var newTree = tree1.clone();
-  newTree.position.x = 5;
-  newTree.position.z = -15;
+  var newTree = treeModel.clone();
+  newTree.position.x = posicionX;
+  newTree.position.z = generarRandom(-20,20);
+  var treeBoxNew = new THREE.Box3().setFromObject(newTree);
+  treesColliders.push(treeBoxNew);
   root.add(newTree);
   console.log("new tree");
 }
 
 
 function addCar(){
-  var newTree = tree1.clone();
-  newTree.position.x = 5;
-  newTree.position.z = -15;
-  root.add(newTree);
+  var newCar = carModel.clone();
+  newCar.position.x = posicionX;
+  var z = generarRandom(-1,1);
+  if (z < 0) {
+    newCar.position.z = z*20;
+  }
+  else if (z > 0) {
+    newCar.position.z = z*20;
+  }
+  else if(z == 0){
+    newCar.position.z = 20;
+  }
+  var carBoxNew = new THREE.Box3().setFromObject(newCar);
+  carsColliders.push(carBoxNew);
+  root.add(newCar);
   console.log("new tree");
 }
 
+function generarRandom(min, max){
+  return  Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function generateMap(){
+  var mapPart = generarRandom(1,3);
+  switch (mapPart) {
+    case 1:
+      generateLand();
+      break;
+    case 2:
+      //generateRoad();
+      generateLand();
+      break;
+    case 3:
+      //generateRiver();
+      generateLand();
+      break;
+    //default:
+  }
+  posicionX+=step;
+}
+
+function generateLand(){
+  var newGrass = grass.clone();
+  newGrass.position.x = posicionX;
+  var numTrees = generarRandom(0,5);
+  for (var i = 0; i < numTrees; i++) {
+    addTree();
+  }
+  root.add(newGrass);
+}
+
 function animate(){
+  //if(game){
     var now = Date.now();
     var deltat = now - currentTime;
     currentTime = now;
-    if(chicken && tree1 && car1){
+    //console.log(chicken);
+    if(chicken && treeModel && carModel){
       chickenBoxHelper.update();
       chickenBox = new THREE.Box3().setFromObject(chicken);
-      treeBoxHelper.update();
-      carBoxHelper.update();
-      carBox = new THREE.Box3().setFromObject(car1);
+      //treeBoxHelper.update();
+      //carBoxHelper.update();
+      carBox = new THREE.Box3().setFromObject(carModel);
       if(chickenBox.intersectsBox(carBox)){
         console.log("choco");
         chicken.move = false;
-        car1.position.z = car1.position.z;
+        carModel.position.z = carModel.position.z;
       }
       if(chicken.move){
         camera.position.x +=(speed * deltat);
-        car1.position.z += 0.03 * deltat;
-        if(car1.position.z > 40)
-          car1.position.z = -70 - Math.random() * 50;
+        carModel.position.z += 0.03 * deltat;
+        if(carModel.position.z > 40)
+          carModel.position.z = -70 - Math.random() * 50;
+        if(maxTiles  > 0){
+          generateMap();
+          maxTiles--;
+        }
+        if(maxTiles < 9){
+          maxTiles += 20;
+        }
       }
       if(camera.position.x - (1.3*deltat) > chickenGroup.position.x || chickenGroup.position.z > camera.right - 5 || chickenGroup.position.z < camera.left + 10){
         chicken.move = false;
@@ -307,6 +387,7 @@ function animate(){
       }
 
     }
+  //}
 }
 
 function run() {
@@ -316,9 +397,6 @@ function run() {
 }
 
 function createScene(canvas) {
-  var mapUrl = "images/grasslush.png";
-  var normalMapUrl =  "images/grassnormalmap.png";
-  var aspect = window.innerWidth / window.innerHeight, size = 1000;
   // Create the Three.js renderer and attach it to our canvas
   renderer = new THREE.WebGLRenderer( { canvas: canvas, antialias: true } );
   // Set the viewport size
@@ -340,20 +418,9 @@ function createScene(canvas) {
   root = new THREE.Object3D;
   ambientLight = new THREE.AmbientLight ( 0xffffff );
   root.add(ambientLight);
-  loadObj();
   group = new THREE.Object3D;
-  var map = new THREE.TextureLoader().load(mapUrl);
-  var mapN = new THREE.TextureLoader().load(normalMapUrl);
-  map.wrapS = map.wrapT = THREE.RepeatWrapping;
-  map.repeat.set(8, 8);
-  mapN.wrapS = mapN.wrapT = THREE.RepeatWrapping;
-  mapN.repeat.set(8, 8);
-  var color = 0xffffff;
-  geometry = new THREE.PlaneGeometry(200, 200, 100, 100);
-  var mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:color, map:map,normalMap:mapN, side:THREE.DoubleSide}));
-  mesh.rotation.x = Math.PI /2;
-  // Add the mesh to our group
-  group.add(mesh);
+  loadObj();
+
   root.add(group);
   scene.add(root);
 
@@ -361,4 +428,5 @@ function createScene(canvas) {
   document.addEventListener("keydown", onDocumentKeyDown, false);
   document.addEventListener("keyup", onDocumentKeyUp);
   document.getElementById("score").innerHTML = "Score: "+valueScore;
+  button = document.getElementById("start");
 }

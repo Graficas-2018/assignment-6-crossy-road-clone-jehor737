@@ -24,16 +24,16 @@
   			// create the scene
   			createScene(canvas);
   			// Run the run loop
-  			run();
-  			/*$("#start").click(function(event) {
+  			$("#start").click(function(event) {
   				//event.preventDefault();
-  				if(!game){
+  				if(!chicken.move){
   					startGame();
   				}
   				else{
   					restartGame();
   				}
-  			});*/
+  			});
+        run();
 
   		}
   	);
@@ -46,7 +46,7 @@
       <div id="score"></div>
       <div id="time"></div>
   		<canvas id="webglcanvas" width=800 height=600></canvas>
-  		<!--<button type="button" name="Start" id="start" class="btn btn-primary">Start</button>-->
+  	<button type="button" name="Start" id="start" class="btn btn-primary">Start</button>
   	</div>
   </body>
   </html>
