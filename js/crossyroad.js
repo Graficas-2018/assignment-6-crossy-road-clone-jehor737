@@ -82,13 +82,20 @@ function updateCollisionCars(deltat){
 }
 
 function updateStep(){
+  var closer=0;
   if (chicken.enTronco && chickenBox.intersectsBox(troncosColliders[valor].collider)) {
     console.log("Hola");
   }
   else if(chicken.enTronco && !chickenBox.intersectsBox(troncosColliders[valor].collider)){
     chicken.enTronco = false;
     chicken.position.y=0;
-    console.log("False");
+    chickenGroup.position.z= Math.floor((chickenGroup.position.z/step))*step;
+    enfrente.position.z = chickenGroup.position.z;
+    atras.position.z = chickenGroup.position.z;
+    derecha.position.z = chickenGroup.position.z + step;
+    izquierda.position.z = chickenGroup.position.z - step;
+
+
   }
 }
 
@@ -223,6 +230,23 @@ function startGame(){
   chicken.move= true;
   button.style.display = "none";
 }
+
+function restartGame() {
+  /*scene.remove(groupRobots);
+  groupRobots = new THREE.Object3D;
+  scene.add(groupRobots);
+  //Reset counters, clock, targets, score
+  targetList = [];
+  robots = 0;
+  robotNumber = 0;
+  lastSpawn = -1;
+  robotMixers = [];
+  chicken.move = true;
+  button.style.display = "none";
+  valueScore = 0;
+  document.getElementById("score").innerHTML = "Score: "+valueScore;*/
+}
+
 
 function loadObj(){
     if(!objLoader)
@@ -410,6 +434,10 @@ function generateMap(){
       break;
   }
   posicionX+=step;
+}
+
+function landInicial(){
+
 }
 
 function generateLand(){
