@@ -26,6 +26,8 @@ function onWindowResize()
 }
 function onDocumentKeyUp(event){
   fired=false;
+  if(!chicken.enTronco)
+    chicken.position.y = 0;
 }
 function updateScore(){
   valueScore = valueScore + 1;
@@ -79,6 +81,17 @@ function updateCollisionCars(deltat){
   }
 }
 
+function updateStep(){
+  if (chicken.enTronco && chickenBox.intersectsBox(troncosColliders[valor].collider)) {
+    console.log("Hola");
+  }
+  else if(chicken.enTronco && !chickenBox.intersectsBox(troncosColliders[valor].collider)){
+    chicken.enTronco = false;
+    chicken.position.y=0;
+    console.log("False");
+  }
+}
+
 function updateCollisionTroncos(deltat){
   if(!chicken.move){
     return;
@@ -101,12 +114,13 @@ function updateCollisionTroncos(deltat){
       chickenGroup.position.z = troncosColliders[i].position.z;
       valor = i;
       chicken.enTronco = true;
-    }
-    else{
-      chicken.enTronco = false;
-      chicken.position.y=0;
+      enfrente.position.z = chickenGroup.position.z;
+      atras.position.z = chickenGroup.position.z;
+      derecha.position.z = chickenGroup.position.z + step;
+      izquierda.position.z = chickenGroup.position.z - step;
     }
   }
+  updateStep();
 }
 
 function updateCollisionRiver(){
@@ -378,51 +392,6 @@ function loadObj(){
         });
 }
 
-function addTree(){
-  var newTree = treeModel.clone();
-  newTree.position.x = posicionX;
-  newTree.position.z = zTreesPositions[generarRandom(0,7)];
-  var treeBoxNew = new THREE.Box3().setFromObject(newTree);
-  treesColliders.push(treeBoxNew);
-  root.add(newTree);
-}
-
-function addCar(direction){
-  var newCar = carModel.clone();
-  newCar.position.x = posicionX;
-  newCar.direction = direction;
-  var z = generarRandom(1,3);
-  if(direction == 2){
-    newCar.rotation.y = Math.PI;
-    newCar.position.z = z*30;
-  }
-  else{
-    newCar.position.z = -30*z;
-  }
-  var carBoxNew = new THREE.Box3().setFromObject(newCar);
-  carsColliders.push(newCar);
-  root.add(newCar);
-}
-
-function addTronco(direction){
-  var newTronco = troncos.clone();
-  newTronco.position.x = posicionX;
-  newTronco.position.y= 1;
-  newTronco.direction = direction;
-  newTronco.hasChicken = false;
-  var z = generarRandom(1,3);
-  if(direction == 2){
-    newTronco.position.z = z*30;
-  }
-  else{
-    newTronco.position.z = -30*z;
-  }
-  var troncoBoxNew = new THREE.Box3().setFromObject(newTronco);
-  newTronco.collider = troncoBoxNew;
-  troncosColliders.push(newTronco);
-  root.add(newTronco);
-}
-
 function generarRandom(min, max){
   return  Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -477,6 +446,51 @@ function generateRiver(){
   }
   riverColliders.push(newRiver.collider);
   root.add(newRiver);
+}
+
+function addTree(){
+  var newTree = treeModel.clone();
+  newTree.position.x = posicionX;
+  newTree.position.z = zTreesPositions[generarRandom(0,7)];
+  var treeBoxNew = new THREE.Box3().setFromObject(newTree);
+  treesColliders.push(treeBoxNew);
+  root.add(newTree);
+}
+
+function addCar(direction){
+  var newCar = carModel.clone();
+  newCar.position.x = posicionX;
+  newCar.direction = direction;
+  var z = generarRandom(1,3);
+  if(direction == 2){
+    newCar.rotation.y = Math.PI;
+    newCar.position.z = z*30;
+  }
+  else{
+    newCar.position.z = -30*z;
+  }
+  var carBoxNew = new THREE.Box3().setFromObject(newCar);
+  carsColliders.push(newCar);
+  root.add(newCar);
+}
+
+function addTronco(direction){
+  var newTronco = troncos.clone();
+  newTronco.position.x = posicionX;
+  newTronco.position.y= 1;
+  newTronco.direction = direction;
+  newTronco.hasChicken = false;
+  var z = generarRandom(1,3);
+  if(direction == 2){
+    newTronco.position.z = z*30;
+  }
+  else{
+    newTronco.position.z = -30*z;
+  }
+  var troncoBoxNew = new THREE.Box3().setFromObject(newTronco);
+  newTronco.collider = troncoBoxNew;
+  troncosColliders.push(newTronco);
+  root.add(newTronco);
 }
 
 function animate(){
