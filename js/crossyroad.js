@@ -11,9 +11,10 @@ chicken=null,treeModel = null,posicionX=-20,
 orbitControls = null,
 chickenBoxHelper = null, treeBoxHelper = null, chickenBox = null, treeBox = null, newTree=null, carModel=null,currentTime,
 carBoxHelper = null, carBox= null, valueScore = 0, speed = 0.01, dotGeo = null, enfrente = null, izquierda =null, derecha=null, atras=null,
-step = 5, chickenGroup=null, treesColliders = [], carsColliders = [];
+step = 5, chickenGroup=null, treesColliders = [], carsColliders = [], cars = null;
 var map = "", mapUrl="", grass = null, river = null, troncos = null, road =null;
-var trigger = false, turnDown = false, turnUp = false, turnRight = false, turnLeft=false, fired = false,load = false;
+var trigger = false, turnDown = false, turnUp = false, turnRight = false, turnLeft=false, fired = false,load = false,
+zTreesPositions = [-20,-15,-10,-5,0,5,10,15,20];
 var maxTiles = 20;
 var materials = {dot: new THREE.MeshBasicMaterial({color: 0x0000ff })};
 function onWindowResize()
@@ -47,6 +48,19 @@ function updateCollision(){
     }
     if(treesColliders[i].containsPoint(derecha.position)){
       turnRight = false;
+    }
+  }
+}
+
+function updateCollisionCars(deltat){
+  for (var i = 0; i< carsColliders.length; i++) {
+    carsColliders[i].position.z += 0.03 * deltat;
+    if(carsColliders[i].position.z > 40)
+      carsColliders[i].position.z = -70 - Math.random() * 50;
+    var carBoxNew = new THREE.Box3().setFromObject(carsColliders[i]);
+    carsColliders[i].collider = carBoxNew;
+    if (chickenBox.intersectsBox(carsColliders[i].collider)) {
+      chicken.move = false;
     }
   }
 }
@@ -140,7 +154,6 @@ function startGame(){
   button.style.display = "none";
 }
 
-
 function loadObj()
 {
     if(!objLoader)
@@ -185,12 +198,9 @@ function loadObj()
             scene.add(atras);
             scene.add(derecha);
             scene.add(izquierda);
-
             chickenBoxHelper.visible=true;
-            chickenBox = new THREE.Box3().setFromObject(chickenBoxHelper);
+            chickenBox = new THREE.Box3().setFromObject(chicken);
             chicken.collider = chickenBox;
-            chickenGroup.add(chickenBoxHelper);
-            root.add(chickenBoxHelper);
             root.add(chickenGroup);
 
             objLoader.load('models/Trees/Tree1/tree1.obj', function(object) {
@@ -205,16 +215,11 @@ function loadObj()
                   }
               });
               treeModel = object;
-              treeModel.scale.set(step,step,step);
+              treeModel.scale.set(step,8,step);
               treeModel.position.x=posicionX;
               treeModel.position.z=-10;
-              /*treeBoxHelper = new THREE.BoxHelper();
-              treeBoxHelper.setFromObject(treeModel, 0x00ff00);
-              treeBoxHelper.position = treeModel.position;*/
-              //treeBoxHelper.update();
               treeBox = new THREE.Box3().setFromObject(treeModel);
               treesColliders.push(treeBox);
-              //root.add(treeBoxHelper);
               root.add(treeModel);
             });
               objLoader.load('models/Cars/Car1/car1.obj', function(object) {
@@ -232,6 +237,7 @@ function loadObj()
                 carModel.scale.set(5,5,5);
                 carModel.position.x=10;
                 carModel.position.z=-50 - Math.random() * 50;
+                carsColliders.push(carModel);
                 root.add(carModel);
               });
               objLoader.load('models/Land/grass.obj',function(object){
@@ -286,31 +292,36 @@ function loadObj()
 function addTree(){
   var newTree = treeModel.clone();
   newTree.position.x = posicionX;
-  newTree.position.z = generarRandom(-20,20);
+  newTree.position.z = zTreesPositions[generarRandom(0,7)];
+
   var treeBoxNew = new THREE.Box3().setFromObject(newTree);
   treesColliders.push(treeBoxNew);
   root.add(newTree);
-  console.log("new tree");
 }
 
 
-function addCar(){
+function addCar(direction){
   var newCar = carModel.clone();
   newCar.position.x = posicionX;
   var z = generarRandom(-1,1);
+  if(direction == 2){
+    newCar.rotation.y = Math.PI;
+  }
+  else{
+
+  }
   if (z < 0) {
-    newCar.position.z = z*20;
+    newCar.position.z = z*30;
   }
   else if (z > 0) {
-    newCar.position.z = z*20;
+    newCar.position.z = z*30;
   }
   else if(z == 0){
-    newCar.position.z = 20;
+    newCar.position.z = 30;
   }
   var carBoxNew = new THREE.Box3().setFromObject(newCar);
-  carsColliders.push(carBoxNew);
+  carsColliders.push(newCar);
   root.add(newCar);
-  console.log("new tree");
 }
 
 function generarRandom(min, max){
@@ -324,8 +335,8 @@ function generateMap(){
       generateLand();
       break;
     case 2:
-      //generateRoad();
-      generateLand();
+      generateRoad();
+      //generateLand();
       break;
     case 3:
       //generateRiver();
@@ -339,30 +350,33 @@ function generateMap(){
 function generateLand(){
   var newGrass = grass.clone();
   newGrass.position.x = posicionX;
-  var numTrees = generarRandom(0,5);
+  var numTrees = generarRandom(1,5);
   for (var i = 0; i < numTrees; i++) {
     addTree();
   }
   root.add(newGrass);
 }
 
+function generateRoad(){
+  var newRoad = road.clone();
+  newRoad.position.x = posicionX;
+  var numCars = generarRandom(1,2);
+  var direction = generarRandom(1,2);
+  for (var i = 0; i < numCars; i++) {
+    addCar(direction);
+  }
+  root.add(newRoad);
+}
+
 function animate(){
-  //if(game){
     var now = Date.now();
     var deltat = now - currentTime;
     currentTime = now;
     //console.log(chicken);
     if(chicken && treeModel && carModel){
-      chickenBoxHelper.update();
-      chickenBox = new THREE.Box3().setFromObject(chicken);
-      //treeBoxHelper.update();
-      //carBoxHelper.update();
-      carBox = new THREE.Box3().setFromObject(carModel);
-      if(chickenBox.intersectsBox(carBox)){
-        console.log("choco");
-        chicken.move = false;
-        carModel.position.z = carModel.position.z;
-      }
+      //chickenBoxHelper.update();
+      chickenBox.setFromObject(chicken);
+      updateCollisionCars(deltat);
       if(chicken.move){
         camera.position.x +=(speed * deltat);
         carModel.position.z += 0.03 * deltat;
@@ -372,7 +386,7 @@ function animate(){
           generateMap();
           maxTiles--;
         }
-        if(maxTiles < 9){
+        if(maxTiles < 2){
           maxTiles += 20;
         }
       }
@@ -387,7 +401,6 @@ function animate(){
       }
 
     }
-  //}
 }
 
 function run() {
