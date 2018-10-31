@@ -12,9 +12,8 @@ orbitControls = null,
 chickenBoxHelper = null, treeBoxHelper = null, chickenBox = null, treeBox = null, newTree=null, carModel=null,currentTime,
 carBoxHelper = null, carBox= null, valueScore = 0, speed = 0.01, dotGeo = null, enfrente = null, izquierda =null, derecha=null, atras=null,
 step = 5, chickenGroup=null, treesColliders = [], carsColliders = [],riverColliders=[], troncosColliders=[], cars = null;
-var map = "", mapUrl="", grass = null, river = null, troncos = null, road =null;
-var trigger = false, turnDown = false, turnUp = false, turnRight = false, turnLeft=false, fired = false,load = false,enTronco=false,
-zTreesPositions = [-20,-15,-10,-5,0,5,10,15,20];
+var grass = null, river = null, troncos = null, road =null;
+var trigger = false, turnDown = false, turnUp = false, turnRight = false, turnLeft=false, fired = false,zTreesPositions = [-20,-15,-10,-5,0,5,10,15,20];
 var maxTiles = 20;
 var materials = {dot: new THREE.MeshBasicMaterial({color: 0x0000ff })};
 var valor = 0;
@@ -94,8 +93,6 @@ function updateStep(){
     atras.position.z = chickenGroup.position.z;
     derecha.position.z = chickenGroup.position.z + step;
     izquierda.position.z = chickenGroup.position.z - step;
-
-
   }
 }
 
@@ -227,24 +224,44 @@ function moverPuntos(direccion){
 }
 
 function startGame(){
+  game = true;
   chicken.move= true;
   button.style.display = "none";
 }
 
 function restartGame() {
-  /*scene.remove(groupRobots);
-  groupRobots = new THREE.Object3D;
-  scene.add(groupRobots);
-  //Reset counters, clock, targets, score
-  targetList = [];
-  robots = 0;
-  robotNumber = 0;
-  lastSpawn = -1;
-  robotMixers = [];
-  chicken.move = true;
+  posicionX=-20;
+  scene.remove(root);
+  root = new THREE.Object3D;
+  //Reset counters,targets, score
+  treesColliders = [];
+  carsColliders = [];
+  riverColliders=[];
+  troncosColliders=[];
+  turnDown = false;
+  turnUp = false;
+  turnRight = false;
+  turnLeft=false;
+  fired = false;
+  chicken.position.y = 0;
+  chickenGroup.position.set(0,0,0);
+  derecha.position.set(chickenGroup.position.x,0, chickenGroup.position.z +step);
+  atras.position.set(chickenGroup.position.x-step,0, chickenGroup.position.z);
+  enfrente.position.set(chickenGroup.position.x+step,0, chickenGroup.position.z);
+  izquierda.position.set(chickenGroup.position.x,0, chickenGroup.position.z -step);
+  valor = 0;
+  maxTiles = 20;
+  camera.position.set(-15, 25, 5);
+  camera.lookAt(scene.position);
+  root.add(ambientLight);
+  root.add(chickenGroup);
+  landInicial();
+  scene.add(root);
   button.style.display = "none";
   valueScore = 0;
-  document.getElementById("score").innerHTML = "Score: "+valueScore;*/
+  document.getElementById("score").innerHTML = "Score: "+valueScore;
+  document.getElementById("time").innerHTML = "";
+  chicken.move = true;
 }
 
 
@@ -295,7 +312,6 @@ function loadObj(){
             chickenBoxHelper.visible=true;
             chickenBox = new THREE.Box3().setFromObject(chicken);
             chicken.collider = chickenBox;
-            root.add(chickenBoxHelper);
             root.add(chickenGroup);
 
             objLoader.load('models/Trees/Tree1/tree1.obj', function(object) {
@@ -347,10 +363,7 @@ function loadObj(){
                 grass.position.y = 0;
                 grass.rotation.set(Math.PI,Math.PI / 2,Math.PI);
                 root.add(grass);
-                while (posicionX < 5) {
-                    generateLand();
-                    posicionX += 5;
-                }
+                landInicial();
               });
               objLoader.load('models/Road/road2.obj',function(object){
                 var texture = new THREE.TextureLoader().load('models/Road/road2.png');
@@ -437,7 +450,39 @@ function generateMap(){
 }
 
 function landInicial(){
-
+  while (posicionX < 0) {
+    var newGrass = grass.clone();
+    newGrass.position.x = posicionX;
+    var numTrees = zTreesPositions.length;
+    for (var i = 0; i < numTrees; i++) {
+      var newTree = treeModel.clone();
+      newTree.position.x = posicionX;
+      newTree.position.z = zTreesPositions[i];
+      var treeBoxNew = new THREE.Box3().setFromObject(newTree);
+      treesColliders.push(treeBoxNew);
+      root.add(newTree);
+    }
+    root.add(newGrass);
+    posicionX += 5;
+  }
+  if(posicionX == 0){
+    var newGrass = grass.clone();
+    newGrass.position.x = posicionX;
+    var numTrees = 4;
+    for (var i = 0; i < numTrees; i++) {
+      var newTree = treeModel.clone();
+      newTree.position.x = posicionX;
+      if(i % 2 == 0)
+        newTree.position.z = zTreesPositions[i];
+      else
+          newTree.position.z = zTreesPositions[zTreesPositions.length-i];
+      var treeBoxNew = new THREE.Box3().setFromObject(newTree);
+      treesColliders.push(treeBoxNew);
+      root.add(newTree);
+    }
+    root.add(newGrass);
+    posicionX+=5;
+  }
 }
 
 function generateLand(){
@@ -526,6 +571,18 @@ function animate(){
     var deltat = now - currentTime;
     currentTime = now;
     if(chicken && treeModel && carModel){
+      if(!chicken.move && !game){
+        button.innerHTML = "Start";
+        button.style.display = "block";
+        return;
+      }
+      if(!chicken.move){
+        document.getElementById("time").innerHTML = "Game Over";
+        button.innerHTML = "Restart";
+        button.style.display = "block";
+        return;
+      }
+
       chickenBox.setFromObject(chicken);
       chickenBoxHelper.update();
       updateCollisionCars(deltat);
@@ -585,10 +642,7 @@ function createScene(canvas) {
   root.add(ambientLight);
   group = new THREE.Object3D;
   loadObj();
-
-  root.add(group);
   scene.add(root);
-
   window.addEventListener( 'resize', onWindowResize);
   document.addEventListener("keydown", onDocumentKeyDown, false);
   document.addEventListener("keyup", onDocumentKeyUp);
