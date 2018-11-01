@@ -301,10 +301,10 @@ function loadObj(){
             enfrente.position.set(chickenGroup.position.x+step,0, chickenGroup.position.z);
             izquierda = new THREE.Mesh(dotGeo, this.materials.dot);
             izquierda.position.set(chickenGroup.position.x,0, chickenGroup.position.z -step);
-            derecha.visible = true;
-            izquierda.visible = true;
-            enfrente.visible = true;
-            atras.visible = true;
+            derecha.visible = false;
+            izquierda.visible = false;
+            enfrente.visible = false;
+            atras.visible = false;
             scene.add(enfrente);
             scene.add(atras);
             scene.add(derecha);
