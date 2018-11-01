@@ -24,6 +24,7 @@ canvas{
 	position:absolute;
 	left:20px;
 	top:50px;
+  color: white;
 }
 #score {
 	position:inherit;

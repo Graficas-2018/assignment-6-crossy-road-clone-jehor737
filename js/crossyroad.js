@@ -81,11 +81,10 @@ function updateCollisionCars(deltat){
 }
 
 function updateStep(){
-  var closer=0;
   if (chicken.enTronco && chickenBox.intersectsBox(troncosColliders[valor].collider)) {
     console.log("Hola");
   }
-  else if(chicken.enTronco && !chickenBox.intersectsBox(troncosColliders[valor].collider)){
+  else if(chicken.enTronco && !chickenBox.intersectsBox(troncosColliders[valor].collider) && turnUp){
     chicken.enTronco = false;
     chicken.position.y=0;
     chickenGroup.position.z= Math.floor((chickenGroup.position.z/step))*step;
@@ -124,7 +123,8 @@ function updateCollisionTroncos(deltat){
       izquierda.position.z = chickenGroup.position.z - step;
     }
   }
-  updateStep();
+  if(troncosColliders.length > 0)
+    updateStep();
 }
 
 function updateCollisionRiver(){
@@ -141,7 +141,7 @@ function onDocumentKeyDown(event) {
     var keyCode = event.which;
     fired = true;
     //Up
-    if (keyCode == 87) {
+    if (keyCode == 87 || keyCode == 38) {
       if(chickenGroup.rotation.y != 0){
         chickenGroup.rotation.y = 0
       }
@@ -154,7 +154,7 @@ function onDocumentKeyDown(event) {
       updateCollisionTree();
     }
     //Down
-    else if (keyCode == 83) {
+    else if (keyCode == 83 || keyCode==40) {
       if(chickenGroup.rotation.y != -Math.PI){
         chickenGroup.rotation.y = - Math.PI;
       }
@@ -166,7 +166,7 @@ function onDocumentKeyDown(event) {
         updateCollisionTree();
     }
     //izquierda
-    else if (keyCode == 65) {
+    else if (keyCode == 65 || keyCode == 37) {
         if(chickenGroup.rotation.y != Math.PI/2){
           chickenGroup.rotation.y = Math.PI/2;
         }
@@ -178,7 +178,7 @@ function onDocumentKeyDown(event) {
         updateCollisionTree();
     }
     //derecha
-    else if (keyCode == 68) {
+    else if (keyCode == 68 || keyCode == 39) {
         if(chickenGroup.rotation.y != -Math.PI / 2){
           chickenGroup.rotation.y = -Math.PI / 2;
         }
@@ -260,7 +260,7 @@ function restartGame() {
   button.style.display = "none";
   valueScore = 0;
   document.getElementById("score").innerHTML = "Score: "+valueScore;
-  document.getElementById("time").innerHTML = "";
+  document.getElementById("time").innerHTML = "Move with WASD";
   chicken.move = true;
 }
 
@@ -362,7 +362,7 @@ function loadObj(){
                 grass.position.x = posicionX;
                 grass.position.y = 0;
                 grass.rotation.set(Math.PI,Math.PI / 2,Math.PI);
-                root.add(grass);
+
                 landInicial();
               });
               objLoader.load('models/Road/road2.obj',function(object){
@@ -380,7 +380,6 @@ function loadObj(){
                 road.position.x=10;
                 road.position.y = 0;
                 road.rotation.set(0,Math.PI / 2,Math.PI);
-                root.add(road);
               });
 
               objLoader.load('models/River/river.obj',function(object){
@@ -647,5 +646,6 @@ function createScene(canvas) {
   document.addEventListener("keydown", onDocumentKeyDown, false);
   document.addEventListener("keyup", onDocumentKeyUp);
   document.getElementById("score").innerHTML = "Score: "+valueScore;
+  document.getElementById("time").innerHTML = "Move with WASD";
   button = document.getElementById("start");
 }
