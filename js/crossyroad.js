@@ -15,7 +15,8 @@ step = 5, chickenGroup=null, treesColliders = [], carsColliders = [],riverCollid
 var grass = null, river = null, troncos = null, road =null;
 var trigger = false, turnDown = false, turnUp = false, turnRight = false, turnLeft=false, fired = false,zTreesPositions = [-20,-15,-10,-5,0,5,10,15,20];
 var maxTiles = 20;
-var materials = {dot: new THREE.MeshBasicMaterial({color: 0x0000ff })};
+var materials = {dotU: new THREE.MeshBasicMaterial({color: 0x0000ff }), dotD: new THREE.MeshBasicMaterial({color: 0x00ff00 }),
+dotL: new THREE.MeshBasicMaterial({color: 0xff0000 }), dotR: new THREE.MeshBasicMaterial({color: 0xffffff })};
 var valor = 0;
 function onWindowResize()
 {
@@ -60,12 +61,12 @@ function updateCollisionCars(deltat){
   }
   for (var i = 0; i< carsColliders.length; i++) {
     if (carsColliders[i].direction == 2) {
-      carsColliders[i].position.z -= 0.03 * deltat;
+      carsColliders[i].position.z -= 0.02 * deltat;
       if(carsColliders[i].position.z < -40)
         carsColliders[i].position.z = 70 + Math.random() * 5;
     }
     else{
-      carsColliders[i].position.z += 0.03 * deltat;
+      carsColliders[i].position.z += 0.02 * deltat;
       if(carsColliders[i].position.z > 40)
         carsColliders[i].position.z = -70 - Math.random() * 5;
     }
@@ -82,16 +83,23 @@ function updateCollisionCars(deltat){
 
 function updateStep(){
   if (chicken.enTronco && chickenBox.intersectsBox(troncosColliders[valor].collider)) {
-    console.log("Hola");
-  }
-  else if(chicken.enTronco && !chickenBox.intersectsBox(troncosColliders[valor].collider) && turnUp){
-    chicken.enTronco = false;
-    chicken.position.y=0;
-    chickenGroup.position.z= Math.floor((chickenGroup.position.z/step))*step;
+    chickenGroup.position.z = troncosColliders[valor].position.z;
     enfrente.position.z = chickenGroup.position.z;
     atras.position.z = chickenGroup.position.z;
     derecha.position.z = chickenGroup.position.z + step;
     izquierda.position.z = chickenGroup.position.z - step;
+  }
+  else if(chicken.enTronco && !chickenBox.intersectsBox(troncosColliders[valor].collider)){
+    valor = 0;
+    chicken.enTronco = false;
+    chicken.position.y=0;
+    if(turnUp){
+      chickenGroup.position.z= Math.floor((chickenGroup.position.z/step))*step;
+      enfrente.position.z = chickenGroup.position.z;
+      atras.position.z = chickenGroup.position.z;
+      derecha.position.z = chickenGroup.position.z + step;
+      izquierda.position.z = chickenGroup.position.z - step;
+    }
   }
 }
 
@@ -293,13 +301,13 @@ function loadObj(){
             chickenBoxHelper.update();
             chickenGroup.add(chicken);
             dotGeo = new THREE.SphereGeometry(0.5);
-            derecha = new THREE.Mesh(dotGeo, this.materials.dot);
+            derecha = new THREE.Mesh(dotGeo, this.materials.dotR);
             derecha.position.set(chickenGroup.position.x,0, chickenGroup.position.z +step);
-            atras = new THREE.Mesh(dotGeo, this.materials.dot);
+            atras = new THREE.Mesh(dotGeo, this.materials.dotD);
             atras.position.set(chickenGroup.position.x-step,0, chickenGroup.position.z);
-            enfrente = new THREE.Mesh(dotGeo, this.materials.dot);
+            enfrente = new THREE.Mesh(dotGeo, this.materials.dotU);
             enfrente.position.set(chickenGroup.position.x+step,0, chickenGroup.position.z);
-            izquierda = new THREE.Mesh(dotGeo, this.materials.dot);
+            izquierda = new THREE.Mesh(dotGeo, this.materials.dotL);
             izquierda.position.set(chickenGroup.position.x,0, chickenGroup.position.z -step);
             derecha.visible = false;
             izquierda.visible = false;
