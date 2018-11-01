@@ -52,6 +52,9 @@ function updateCollisionTree(){
     if(treesColliders[i].containsPoint(derecha.position)){
       turnRight = false;
     }
+    if(treesColliders[i].intersectsBox(chickenBox)){
+      chickenGroup.position.z = chickenGroup.position.z-5;
+    }
   }
 }
 
